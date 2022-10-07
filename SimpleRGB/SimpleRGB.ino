@@ -1,3 +1,7 @@
+// Test Color: f242f5 / 15876853
+
+#include <EEPROM.h>
+
 const int RED = 8;
 const int GREEN = 9;
 const int BLUE = 10;
@@ -20,7 +24,7 @@ int getB(int value)
 }
 
 void setup()
-{
+{  
   Serial.begin(9600);
   pinMode(RED, OUTPUT);
   pinMode(GREEN, OUTPUT);
@@ -28,6 +32,11 @@ void setup()
   analogWrite(RED, 255);
   analogWrite(GREEN, 255);
   analogWrite(BLUE, 255);
+  
+  byte start = EEPROM.read(0);
+  byte end = EEPROM.read(1);
+  int color = (start << 8) + end;
+  updateColors(color);
 }
 
 void updateColors(int color)
@@ -61,6 +70,8 @@ void loop() {
   if (lastColor != color)
   {
     lastColor = color;
+    EEPROM.write(0, color >> 8);
+    EEPROM.write(1, color & 255);
     updateColors(color);
   }
 }
