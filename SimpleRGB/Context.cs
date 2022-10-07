@@ -14,6 +14,7 @@ public class Context : ApplicationContext
     private readonly NotifyIcon notifyIcon;
     private readonly ContextMenuStrip strip;
     private readonly Icon icon;
+    private readonly COMPort configureCOM = new COMPort();
     
     /// <summary>
     /// Creates a new custom Context.
@@ -24,9 +25,12 @@ public class Context : ApplicationContext
         strip = new ContextMenuStrip();
         notifyIcon = new NotifyIcon();
 
+        ToolStripMenuItem configure = new ToolStripMenuItem("Configure COM Port");
+        configure.Click += ConfigureOnClick;
         ToolStripMenuItem exit = new ToolStripMenuItem("Exit");
         exit.Click += ExitOnClick;
 
+        strip.Items.Add(configure);
         strip.Items.Add(exit);
 
         notifyIcon.Icon = icon;
@@ -34,6 +38,7 @@ public class Context : ApplicationContext
         notifyIcon.Visible = true;
         
         ThreadExit += OnThreadExit;
+        ToastNotificationManagerCompat.OnActivated += ToastNotificationManagerCompatOnOnActivated;
 
         new ToastContentBuilder()
             .AddArgument("com", "COM")
@@ -43,6 +48,18 @@ public class Context : ApplicationContext
     }
 
     private void ExitOnClick(object sender, EventArgs e) => ExitThread();
+
+    private void ConfigureOnClick(object sender, EventArgs e) => configureCOM.ShowDialog();
+
+    private void ToastNotificationManagerCompatOnOnActivated(ToastNotificationActivatedEventArgsCompat e)
+    {
+        ToastArguments args = ToastArguments.Parse(e.Argument);
+
+        if (args.Contains("com"))
+        {
+            configureCOM.ShowDialog();
+        }
+    }
 
     private void OnThreadExit(object sender, EventArgs e)
     {
