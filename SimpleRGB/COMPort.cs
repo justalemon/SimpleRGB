@@ -18,6 +18,8 @@ public partial class COMPort : Form
 
     private void RefreshPorts()
     {
+        PortsComboBox.Items.Clear();
+        
         string[] ports = SerialPort.GetPortNames();
 
         foreach (string port in ports)
