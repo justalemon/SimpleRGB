@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.Reflection;
 using System.Windows.Forms;
+using Microsoft.Toolkit.Uwp.Notifications;
 
 namespace SimpleRGB;
 
@@ -33,6 +34,12 @@ public class Context : ApplicationContext
         notifyIcon.Visible = true;
         
         ThreadExit += OnThreadExit;
+
+        new ToastContentBuilder()
+            .AddArgument("com", "COM")
+            .AddText("You need to configure the COM port!")
+            .AddText("Tap or Click this notification to select your COM port.")
+            .Show();
     }
 
     private void ExitOnClick(object sender, EventArgs e) => ExitThread();
