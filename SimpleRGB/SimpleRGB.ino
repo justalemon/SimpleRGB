@@ -1,4 +1,5 @@
-// Test Color: f242f5 / 15876853
+#define EEPROM_SUPPORT 1
+#define DEBUG 0
 
 #include <EEPROM.h>
 
@@ -6,72 +7,88 @@ const int RED = 8;
 const int GREEN = 9;
 const int BLUE = 10;
 
-int lastColor = -1;
+int last_r = 255;
+int last_g = 255;
+int last_b = 255;
 
-int getR(int value)
+void UpdateColors(int r, int g, int b)
 {
-  return (value >> 16) & 255;
+    analogWrite(RED, 255 - r);
+    analogWrite(GREEN, 255 - g);
+    analogWrite(BLUE, 255 - b);
 }
 
-int getG(int value)
+int Sanitize(int input)
 {
-  return (value >> 8) & 255;
-}
-
-int getB(int value)
-{
-  return (value) & 255;
+    if (input == 0)
+    {
+        return -1;
+    }
+    if (input == -1)
+    {
+        return 0;
+    }
+    return input;
 }
 
 void setup()
-{  
-  Serial.begin(9600);
-  pinMode(RED, OUTPUT);
-  pinMode(GREEN, OUTPUT);
-  pinMode(BLUE, OUTPUT);
-  analogWrite(RED, 255);
-  analogWrite(GREEN, 255);
-  analogWrite(BLUE, 255);
-  
-  byte start = EEPROM.read(0);
-  byte end = EEPROM.read(1);
-  int color = (start << 8) + end;
-  updateColors(color);
-}
-
-void updateColors(int color)
 {
-  int r = getR(color);
-  int g = getG(color);
-  int b = getB(color);
+    Serial.begin(9600);
+    pinMode(RED, OUTPUT);
+    pinMode(GREEN, OUTPUT);
+    pinMode(BLUE, OUTPUT);
 
-  analogWrite(RED, r);
-  analogWrite(GREEN, g);
-  analogWrite(BLUE, b);
+#if EEPROM_SUPPORT
+    last_r = EEPROM.read(0);
+    last_g = EEPROM.read(1);
+    last_b = EEPROM.read(2);
+#endif
+
+#if DEBUG
+    Serial.println(last_r);
+    Serial.println(last_g);
+    Serial.println(last_b);
+#endif
+
+    analogWrite(RED, 255 - last_r);
+    analogWrite(GREEN, 255 - last_g);
+    analogWrite(BLUE, 255 - last_b);
 }
 
-void loop() {
-  int color = Serial.parseInt();
+void loop()
+{
+    if (Serial.available() == 0)
+    {
+        return;
+    }
 
-  if (color == 0)
-  {
-    return;
-  }
+    int r = Sanitize(Serial.parseInt());
+    int g = Sanitize(Serial.parseInt());
+    int b = Sanitize(Serial.parseInt());
 
-  if (color == -1)
-  {
-    color = 0;
-  }
-  else if (color == 0)
-  {
-    color = -1;
-  }
+    if (r == -1 || g == -1 || b == -1)
+    {
+        return;
+    }
 
-  if (lastColor != color)
-  {
-    lastColor = color;
-    EEPROM.write(0, color >> 8);
-    EEPROM.write(1, color & 255);
-    updateColors(color);
-  }
+    if (r != last_r || g != last_g || g != last_b)
+    {
+        UpdateColors(r, g, b);
+
+        last_r = r;
+        last_g = g;
+        last_b = b;
+
+#if DEBUG
+        Serial.println(last_r);
+        Serial.println(last_g);
+        Serial.println(last_b);
+#endif
+
+#if EEPROM_SUPPORT
+        EEPROM.write(0, r - 256);
+        EEPROM.write(1, g - 256);
+        EEPROM.write(2, b - 256);
+#endif
+    }
 }
