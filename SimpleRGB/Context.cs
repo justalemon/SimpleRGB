@@ -23,12 +23,19 @@ public class Context : ApplicationContext
         strip = new ContextMenuStrip();
         notifyIcon = new NotifyIcon();
 
+        ToolStripMenuItem exit = new ToolStripMenuItem("Exit");
+        exit.Click += ExitOnClick;
+
+        strip.Items.Add(exit);
+
         notifyIcon.Icon = icon;
         notifyIcon.ContextMenuStrip = strip;
         notifyIcon.Visible = true;
         
         ThreadExit += OnThreadExit;
     }
+
+    private void ExitOnClick(object sender, EventArgs e) => ExitThread();
 
     private void OnThreadExit(object sender, EventArgs e)
     {
